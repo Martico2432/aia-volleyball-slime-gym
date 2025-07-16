@@ -55,7 +55,7 @@ class SlimeVolleyballSim:
                     slime.velocity[1] = self.jump_force
                     slime.jump_cooldown = np.float32(JUMP_COOLDOWN_SECONDS)
                 slime.jump_cooldown = max(np.float32(0.0), slime.jump_cooldown - DT)
-                # Move toward the otuput, so the target
+                # Move toward the output, so the target
                 dir_vec = (target - slime.position).astype(np.float32)
                 dir_vec[1] = 0.0
                 dist = np.linalg.norm(dir_vec)
@@ -67,6 +67,15 @@ class SlimeVolleyballSim:
                     dv_clipped = np.clip(dv, -max_d, max_d)
                     slime.velocity[0] += dv_clipped[0]
                     slime.velocity[2] += dv_clipped[1]
+                else:
+                    # Smooth deceleration similar to Unity's Vector3.Lerp for velocity
+                    vel_xz = slime.velocity[[0,2]]
+                    lerp_factor = self.acceleration * DT
+                    slime.velocity[0] = vel_xz[0] + (0 - vel_xz[0]) * lerp_factor
+                    slime.velocity[2] = vel_xz[1] + (0 - vel_xz[1]) * lerp_factor
+                    # Snap position to target to avoid drifting
+                    slime.position[0] = target[0]
+                    slime.position[2] = target[2]
                 # Gravity & move
                 slime.velocity += GRAVITY * DT
                 new_pos = slime.position + slime.velocity * DT
