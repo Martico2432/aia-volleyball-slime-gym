@@ -1,0 +1,6 @@
+__pycahce__/*
+*.pyc
+wandb/*
+data/*
+*.pt
+*.json

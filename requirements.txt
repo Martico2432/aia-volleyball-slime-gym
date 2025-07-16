@@ -1,0 +1,3 @@
+rlgym[api]
+git+https://github.com/AechPro/rlgym-ppo
+
