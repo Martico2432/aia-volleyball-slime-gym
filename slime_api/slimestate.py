@@ -22,7 +22,7 @@ class VolleyballState:
     ball_velocity: np.ndarray
     point_scored: bool
     scoring_slime: Optional[int]
-    
+
     steps: int = 0
 
     def __repr__(self):

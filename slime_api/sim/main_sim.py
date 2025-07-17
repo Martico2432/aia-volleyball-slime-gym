@@ -86,11 +86,11 @@ class SlimeVolleyballSim:
                 # Net goes here LOL
                 # Slime can't cross
                 if new_pos[1] < SLIME_BLOCKER_HEIGHT_FLT:
-                    if slime.position[0] < NET_PLANE_X and new_pos[0] + SLIME_RADIUS > NET_PLANE_X - NET_HALF_THICKNESS:
-                        new_pos[0] = NET_PLANE_X - NET_HALF_THICKNESS - SLIME_RADIUS
+                    if slime.position[0] < 0 and new_pos[0] + SLIME_RADIUS > -NET_PLANE_X:
+                        new_pos[0] = 0 - NET_HALF_THICKNESS - SLIME_RADIUS
                         slime.velocity[0] = 0.0
-                    if slime.position[0] > NET_PLANE_X and new_pos[0] - SLIME_RADIUS < NET_PLANE_X + NET_HALF_THICKNESS:
-                        new_pos[0] = NET_PLANE_X + NET_HALF_THICKNESS + SLIME_RADIUS
+                    if slime.position[0] > 0 and new_pos[0] - SLIME_RADIUS < NET_PLANE_X:
+                        new_pos[0] = NET_PLANE_X + SLIME_RADIUS
                         slime.velocity[0] = 0.0
                 slime.position = new_pos
                 # Ball collision
@@ -102,7 +102,11 @@ class SlimeVolleyballSim:
                     self.state.ball_velocity = (v - 2 * np.dot(v,n)*n).astype(np.float32)
                     if slime.touches_remaining > 0:
                         slime.touches_remaining -= 1
-                    self.state.scoring_slime = sid
+                    else:
+                        self.state.point_scored = True
+                        x = self.state.ball_position[0]
+                        scorer = 1 if x < 0 else 0
+                        self.state.scoring_slime = scorer
 
             # BALL
             # Net collision for ball
@@ -113,14 +117,30 @@ class SlimeVolleyballSim:
             # Ball vs net
             bx = self.state.ball_position[0]
             by = self.state.ball_position[1]
-            if abs(bx - NET_PLANE_X) < (BALL_RADIUS + NET_HALF_THICKNESS) and by <= NET_HEIGHT_FLT:
-                # reflect X velocity
-                self.state.ball_velocity[0] *= -BALL_RESTITUTION
-                # reposition in walls
-                if prev_x < NET_PLANE_X:
-                    self.state.ball_position[0] = NET_PLANE_X - NET_HALF_THICKNESS - BALL_RADIUS
+            # Distance from net
+            bndx = abs(bx) - (BALL_RADIUS + NET_HALF_THICKNESS)
+            bndy = by - NET_HEIGHT_FLT - BALL_RADIUS
+
+            if bndx <= 0:
+                for sid, slime in self.state.slimes.items():
+                    slime.touches_remaining = 3
+
+            if bndx <= 0 and bndy <= 0:
+                # We assume whichever wall it's closer to is the one it's bouncing off
+                # NB: This does not account for hitting the courner
+                if bndx >= bndy:
+                    # reflect X velocity
+                    self.state.ball_velocity[0] *= -BALL_RESTITUTION
+                    # reposition in walls
+                    if prev_x < 0:
+                        self.state.ball_position[0] = NET_HALF_THICKNESS - BALL_RADIUS
+                    else:
+                        self.state.ball_position[0] = NET_HALF_THICKNESS + BALL_RADIUS
                 else:
-                    self.state.ball_position[0] = NET_PLANE_X + NET_HALF_THICKNESS + BALL_RADIUS
+                    # reflect X velocity
+                    self.state.ball_velocity[1] *= -BALL_RESTITUTION
+                    # reposition in walls
+                    self.state.ball_position[1] = NET_HEIGHT_FLT + BALL_RADIUS
 
             # Floor collision -> point scored, so we can reset
             if self.state.ball_position[1] <= BALL_RADIUS:
