@@ -9,6 +9,7 @@ SLIME_MASS = 1
 SLIME_DRAG = 0
 SLIME_CoM = np.array([0, 0.05, 0],  dtype=np.float32)
 SLIME_CENTER_ON_FLOOR = -0.045
+SLIME_TOUCH_COOLDOWN = 0.25
 
 JUMP_COOLDOWN_SECONDS = 0.1 # In seconds
 JUMP_FORCE_BASE = 6
@@ -46,6 +47,7 @@ BALL_DRAG = 0
 BALL_CoM = np.array([0, 0, 0], dtype=np.float32)
 
 STAGE_RADIUS = np.array([6.8, 3.5], dtype=np.float32) # It's a rectangle, width and width, so 6.8 is length and 3.5 is width
+STAGE_RADIUS = np.array([6.8, 3.5], dtype=np.float32) # It's a rectangle, width and width, so 6.8 is length and 3.5 is width
 NET_RADIUS_FOR_SLIME = 0.25 # (TBV)
 NET_RADIUS_FOR_BALL = np.array([0.1, 5], dtype=np.float32)
 NET_HEIGHT = 0.95
@@ -65,4 +67,4 @@ BALL_FRICTION = 0
 CEILING_HEIGHT = 14.49
 
 
-DT = np.array([1.0 / 60.0], dtype=np.float32) # 1.0 / 60.0  # 60 fps
+DT = np.array([0.019], dtype=np.float32) # 1.0 / 60.0  # 60 fps
