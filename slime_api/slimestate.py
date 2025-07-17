@@ -7,13 +7,11 @@ from dataclasses import dataclass
 class Slime:
     position: np.ndarray  # Position in 3D space (x, y, z)
     velocity: np.ndarray
+    target: np.ndarray
     touches_remaining: float
     can_jump: bool
     jump_cooldown: float
-
-
-
-
+    touch_cooldown: float
 
 @dataclass
 class VolleyballState:

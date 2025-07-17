@@ -73,7 +73,7 @@ def build_indiedev_500_env():
                                (TouchesReward(), 0.2),
                                (BallDistanceReward(), 0.4)
                                )
-    
+
     obs_builder = IndieDevDefaultObs()
 
     indie_dev_env = RLGym(
@@ -84,7 +84,7 @@ def build_indiedev_500_env():
         termination_cond=termination_condition,
         truncation_cond=truncated_condition,
         transition_engine=IndieDevEngine())
-    
+
     wrapped_env = RLGymV2GymWrapper(indie_dev_env)
     wrapped_env.action_space = gym.spaces.Box(low=-10.0, high=10.0, shape=(4,), dtype=np.float32)  # Set the action space to continuous throttle and steering, not automaticly set
 
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     learner = Learner(build_indiedev_500_env, # DO NOT ADD () HERE, it will break the code
                       n_proc=n_proc, # number of processes to use for training
                       min_inference_size=min_inference_size, # IDK WHAT THIS IS
-                      metrics_logger=MyLogger(), # METRICS LOGGER, None by default, will just make it log simple metrics
+                      metrics_logger=None, # METRICS LOGGER, None by default, will just make it log simple metrics
                       ppo_batch_size=50_000, # batch size - set this number to as large as your GPU can handle
                       policy_layer_sizes=[96, 96, 96], # policy network
                       critic_layer_sizes=[96, 96, 96], # value network
