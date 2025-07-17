@@ -46,12 +46,14 @@ def build_indiedev_500_env():
     from slime_api.slimetrucatedcondition import IndieDevTruncatedCondition
     from slime_api.slimeexampleobs import IndieDevDefaultObs
     from slime_api.slimemutator import IndieDevMutator
+    from slime_api.slimerenderer import SlimeRenderer
 
 
     from rlgym.rocket_league.done_conditions import AnyCondition, AllCondition # Some condition that may be helpful
     from rlgym.rocket_league.action_parsers import  RepeatAction # Skip some actions, so faster training
     from rlgym.rocket_league.reward_functions import CombinedReward # Combine multiple rewards into one
     from rlgym.rocket_league.state_mutators import MutatorSequence # Combine multiple state mutators into one, and they will be applied in order
+
 
     from martico_rewards import PointRward, TouchesReward, BallDistanceReward
 
@@ -83,7 +85,8 @@ def build_indiedev_500_env():
         reward_fn=reward_fn,
         termination_cond=termination_condition,
         truncation_cond=truncated_condition,
-        transition_engine=IndieDevEngine())
+        transition_engine=IndieDevEngine(),
+        renderer=SlimeRenderer("human"))
 
     wrapped_env = RLGymV2GymWrapper(indie_dev_env)
     wrapped_env.action_space = gym.spaces.Box(low=-10.0, high=10.0, shape=(4,), dtype=np.float32)  # Set the action space to continuous throttle and steering, not automaticly set
@@ -92,7 +95,7 @@ def build_indiedev_500_env():
 
 if __name__ == "__main__":
     from rlgym_ppo import Learner
-    n_proc = 32
+    n_proc = 2
     # educated guess - could be slightly higher or lower
     min_inference_size = max(1, int(round(n_proc * 0.9)))
 
@@ -116,6 +119,7 @@ if __name__ == "__main__":
                       timestep_limit=1_000_000_000, # Train for 1B steps
                       wandb_project_name="slime_ai", # WandB project name
                       log_to_wandb=True,
+                      render=True, #? Set to what you want, NOTE: rendering slows down 1 env if render delay is set to something, that is recomended to be 0.1
                       )
     print("Starting training...")
     learner.learn()

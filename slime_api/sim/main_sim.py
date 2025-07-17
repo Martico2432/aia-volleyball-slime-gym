@@ -33,9 +33,9 @@ class SlimeVolleyballSim:
         self.max_speed_points = max_speed
         self.acceleration_points = acceleration
         self.jump_force_points = jump_force
-        self.max_speed = MAX_SPEED_RANGE[max_speed]
-        self.acceleration = ACCELERATION_RANGE[acceleration]
-        self.jump_force = JUMP_FORCE_RANGE[jump_force]
+        self.max_speed = MAX_SPEED_RANGE[int(max_speed)]
+        self.acceleration = ACCELERATION_RANGE[int(acceleration)]
+        self.jump_force = JUMP_FORCE_RANGE[int(jump_force)]
 
         self.render_mode = render_mode
         self.window = None

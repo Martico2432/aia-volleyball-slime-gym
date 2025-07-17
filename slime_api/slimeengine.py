@@ -17,7 +17,7 @@ class IndieDevEngine(TransitionEngine[int, VolleyballState, int]):
     # def __init__(self, port: int = 5000):
     def __init__(self):
         self._slimes = {}  # These will contain THE slimes from THE SIM
-        self._arena = SlimeVolleyballSim(self.create_base_state(), render_mode="human")
+        self._arena = SlimeVolleyballSim(self.create_base_state(), render_mode=None)
         self._state = self._arena.get_state()
 
     @property
