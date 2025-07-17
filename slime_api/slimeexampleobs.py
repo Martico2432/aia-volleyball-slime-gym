@@ -22,6 +22,7 @@ class IndieDevDefaultObs(ObsBuilder[int, np.ndarray, VolleyballState, np.ndarray
         observations = {}
         for host_agent in agents:
             obs = np.array([])
+            # Ball:
             # Add ball position and velocity, relative to us
             invert = state.slimes[host_agent].position[0] < 0
             if invert:
@@ -40,15 +41,19 @@ class IndieDevDefaultObs(ObsBuilder[int, np.ndarray, VolleyballState, np.ndarray
                 ball_vel_z = state.ball_velocity[2]
 
             obs = np.append(obs, ball_pos_x)
+            obs = np.append(obs, state.ball_position[1]) # Ball pos 0, 1, 2
             obs = np.append(obs, ball_pos_z)
+            
             obs = np.append(obs, ball_vel_x)
+            obs = np.append(obs, state.ball_velocity[1]) # Ball vel 3, 4, 5
             obs = np.append(obs, ball_vel_z)
-            obs = np.append(obs, state.ball_position[1])
-            obs = np.append(obs, state.ball_velocity[1])
 
+            obs = np.append(obs, self._build_obs_for_agent(host_agent, state, shared_info, host_agent=host_agent))
 
             for agent in agents:
-                # Get obs for every agent
+                if agent == host_agent:
+                    continue
+                # Get obs for other agent
                 obs = np.append(obs, self._build_obs_for_agent(agent, state, shared_info, host_agent=host_agent))
 
             observations[host_agent] = obs 
