@@ -80,7 +80,6 @@ class IndieDevDefaultObs(ObsBuilder[int, np.ndarray, VolleyballState, np.ndarray
 
         obs = np.append(obs, (state.slimes[agent].touches_remaining)/3) # We didvide by 3, to  noramlize it
         obs = np.append(obs, state.slimes[agent].can_jump)
-        obs = np.append(obs, state.slimes[agent].jump_cooldown)
 
 
         return obs
