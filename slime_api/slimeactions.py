@@ -26,5 +26,9 @@ class SlimeActions(ActionParser[int, int, int, VolleyballState, int]):
             if slime.position[0] < 0:
                 real_actions[agent][0] = -action[0]
                 real_actions[agent][2] = -action[2]
+
+            # Convert the actions to float 32 numpy
+            real_actions[agent] = np.array(real_actions[agent], dtype=np.float32)
+
             
         return real_actions
