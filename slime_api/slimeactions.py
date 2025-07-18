@@ -3,32 +3,32 @@ import numpy as np
 from slime_api.slimestate import Slime, VolleyballState
 from rlgym.api import TransitionEngine, StateMutator, ObsBuilder, ActionParser, RewardFunction, DoneCondition
 
-class SlimeActions(ActionParser[int, int, int, VolleyballState, int]):
-    """Defines the action space and parsing"""
+class SlimeActions(ActionParser[int, np.ndarray, np.ndarray, VolleyballState, int]):
+    """Defines the action space and parsing with fixed side inversion"""
     def get_action_space(self, agent: int) -> int:
-        return 4, 'continuous'  # vec3 and jump
-        # return 2
-        
+        # 3D target + jump flag
+        return 4, 'continuous'
+
     def reset(self, agents: List[int], initial_state: VolleyballState, shared_info: Dict[str, Any]) -> None:
-        pass  # No state to reset
-        
-    def parse_actions(self, actions: Dict[int, np.ndarray], state: VolleyballState, shared_info: Dict[str, Any]) -> Dict[int, int]:
-        # Actions are already in the correct format
-        # actions = {agent: [throttle, steer]}
-        real_actions = actions
-        # Scale first 3 actions by 10, the last one leave it
-        real_actions = {agent: [action * 10 if i < 3 else action for i, action in enumerate(actions[agent])] for agent in actions}
+        # Determine starting side for each agent
+        self.started_on_right = {
+            agent: (initial_state.slimes[agent].position[0] > 0)
+            for agent in agents
+        }
 
-        shared_info['actions'] = real_actions  # Store actions in shared info if needed
-        for agent, action in actions.items():
-            slime = state.slimes[agent]
-            # if slime pos is < 0, then, we want to invert the first 3 items, so x = -x, and z = -z
-            if slime.position[0] < 0:
-                real_actions[agent][0] = -action[0]
-                real_actions[agent][2] = -action[2]
+    def parse_actions(self, actions: Dict[int, np.ndarray], state: VolleyballState, shared_info: Dict[str, Any]) -> Dict[int, np.ndarray]:
+        real_actions: Dict[int, np.ndarray] = {}
+        for agent_id, action in actions.items():
+            proc = action.astype(np.float32)
+            # Scale X, Y, Z targets to [-10, 10]
+            proc[:3] *= 10.0
 
-            # Convert the actions to float 32 numpy
-            real_actions[agent] = np.array(real_actions[agent], dtype=np.float32)
+            # Mirror horizontal axes if started on right
+            if self.started_on_right.get(agent_id, False):
+                proc[0] *= -1.0
+                proc[2] *= -1.0
 
-            
+            real_actions[agent_id] = proc
+
+        shared_info['actions'] = real_actions
         return real_actions

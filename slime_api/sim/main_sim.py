@@ -67,10 +67,11 @@ class SlimeVolleyballSim:
             slime.target = target
             jump_req = bool(act[3])
             is_grounded = slime.position[1] <= np.float32(SLIME_CENTER_ON_FLOOR + 0.1)
+            slime.can_jump = is_grounded and slime.jump_cooldown <= 0.0
             vel = slime.velocity.copy()
             pos = slime.position
 
-            if jump_req and is_grounded and slime.jump_cooldown <= 0.0:
+            if jump_req and slime.can_jump:
                 vel[1] = self.jump_force
                 slime.jump_cooldown = np.float32(JUMP_COOLDOWN_SECONDS)
 

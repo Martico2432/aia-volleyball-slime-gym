@@ -89,7 +89,7 @@ def build_indiedev_500_env():
         renderer=SlimeRenderer("human"))
 
     wrapped_env = RLGymV2GymWrapper(indie_dev_env)
-    wrapped_env.action_space = gym.spaces.Box(low=-10.0, high=10.0, shape=(4,), dtype=np.float32)  # Set the action space to continuous throttle and steering, not automaticly set
+    wrapped_env.action_space = gym.spaces.Box(low=-1, high=1, shape=(4,), dtype=np.float32)  # Set the action space to continuous, not automaticly set
 
     return wrapped_env  # Return the wrapped environment
 

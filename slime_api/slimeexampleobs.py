@@ -1,85 +1,75 @@
 from typing import Dict, Any, List
 import numpy as np
 from slime_api.slimestate import Slime, VolleyballState
-from rlgym.api import TransitionEngine, StateMutator, ObsBuilder, ActionParser, RewardFunction, DoneCondition
+from rlgym.api import ObsBuilder
 
 class IndieDevDefaultObs(ObsBuilder[int, np.ndarray, VolleyballState, np.ndarray]):
-    """Converts state into agent observations"""
-        
+    """Converts state into agent observations with fixed side inversion"""
     def get_obs_space(self, agent: int) -> np.ndarray:
-        self._state = None
-        return 'real', -1 # This means it will adapt :D, the -1, not the real, idk what that does :D
-        
-        
+        # Adaptable observation size
+        return 'real', -1
+
     def reset(self, agents: List[int], initial_state: VolleyballState, shared_info: Dict[str, Any]) -> None:
+        # Determine starting side for each agent
+        self.started_on_right = {
+            agent: (initial_state.slimes[agent].position[0] > 0)
+            for agent in agents
+        }
         self._state = initial_state
-        
+
     def build_obs(self, agents: List[int], state: VolleyballState, shared_info: Dict[str, Any]) -> Dict[int, np.ndarray]:
-        # Build observation for each agent
-        if self._state is None:
-            self._state = state
-        
         observations = {}
         for host_agent in agents:
-            obs = np.array([])
-            # Ball:
-            # Add ball position and velocity, relative to us
-            invert = state.slimes[host_agent].position[0] < 0
+            # Use fixed flag instead of dynamic position
+            invert = self.started_on_right[host_agent]
+            obs = np.array([], dtype=np.float32)
+
+            # Ball position and velocity
             if invert:
-                ball_pos_x = state.ball_position[0] * -1
-                ball_pos_z = state.ball_position[2] * -1
+                ball_pos_x = -state.ball_position[0]
+                ball_pos_z = -state.ball_position[2]
+                ball_vel_x = -state.ball_velocity[0]
+                ball_vel_z = -state.ball_velocity[2]
             else:
                 ball_pos_x = state.ball_position[0]
                 ball_pos_z = state.ball_position[2]
-
-            # Do the same for velocity
-            if invert:
-                ball_vel_x = state.ball_velocity[0] * -1
-                ball_vel_z = state.ball_velocity[2] * -1
-            else:
                 ball_vel_x = state.ball_velocity[0]
                 ball_vel_z = state.ball_velocity[2]
 
-            obs = np.append(obs, ball_pos_x)
-            obs = np.append(obs, state.ball_position[1]) # Ball pos 0, 1, 2
-            obs = np.append(obs, ball_pos_z)
-            
-            obs = np.append(obs, ball_vel_x)
-            obs = np.append(obs, state.ball_velocity[1]) # Ball vel 3, 4, 5
-            obs = np.append(obs, ball_vel_z)
+            obs = np.append(obs, [ball_pos_x,
+                                  state.ball_position[1],
+                                  ball_pos_z,
+                                  ball_vel_x,
+                                  state.ball_velocity[1],
+                                  ball_vel_z])
 
-            obs = np.append(obs, self._build_obs_for_agent(host_agent, state, shared_info, host_agent=host_agent))
+            # Self observation
+            obs = np.append(obs, self._build_obs_for_agent(host_agent, state, invert))
 
+            # Other agent(s)
             for agent in agents:
                 if agent == host_agent:
                     continue
-                # Get obs for other agent
-                obs = np.append(obs, self._build_obs_for_agent(agent, state, shared_info, host_agent=host_agent))
+                obs = np.append(obs, self._build_obs_for_agent(agent, state, invert))
 
-            observations[host_agent] = obs 
+            observations[host_agent] = obs
         return observations
-    
-    def _build_obs_for_agent(self, agent, state: VolleyballState, shared_info, host_agent: int) -> np.ndarray:
 
-        invert = state.slimes[host_agent].position[0] < 0
-        obs = np.array([])
+    def _build_obs_for_agent(self, agent: int, state: VolleyballState, invert: bool) -> np.ndarray:
+        data = []
+        pos = state.slimes[agent].position
+        vel = state.slimes[agent].velocity
+
+        # X, Z position and velocity
         if invert:
-            obs = np.append(obs, state.slimes[agent].position[0] * -1)
-            obs = np.append(obs, state.slimes[agent].position[2] * -1)
-            obs = np.append(obs, state.slimes[agent].velocity[0] * -1)
-            obs = np.append(obs, state.slimes[agent].velocity[2] * -1)
+            data.extend([-pos[0], -pos[2], -vel[0], -vel[2]])
         else:
-            obs = np.append(obs, state.slimes[agent].position[0])
-            obs = np.append(obs, state.slimes[agent].position[2])
-            obs = np.append(obs, state.slimes[agent].velocity[0])
-            obs = np.append(obs, state.slimes[agent].velocity[2])
+            data.extend([pos[0], pos[2], vel[0], vel[2]])
 
+        # Y velocity, Y position, normalized touches, can_jump
+        data.append(vel[1])
+        data.append(pos[1])
+        data.append(state.slimes[agent].touches_remaining / 3)
+        data.append(float(state.slimes[agent].can_jump))
 
-        obs = np.append(obs, state.slimes[agent].velocity[1])
-        obs = np.append(obs, state.slimes[agent].position[1])
-
-        obs = np.append(obs, (state.slimes[agent].touches_remaining)/3) # We didvide by 3, to  noramlize it
-        obs = np.append(obs, state.slimes[agent].can_jump)
-
-
-        return obs
+        return np.array(data, dtype=np.float32)
