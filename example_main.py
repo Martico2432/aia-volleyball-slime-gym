@@ -71,9 +71,9 @@ def build_indiedev_500_env():
     truncated_condition = IndieDevTruncatedCondition(600)
     state_mutator = IndieDevMutator()
 
-    reward_fn = CombinedReward((PointRward(), 5),
+    reward_fn = CombinedReward((PointRward(), 50), # 50 to prevent farming having 3 touches
                                (TouchesReward(), 0.2),
-                               (BallDistanceReward(), 0.4)
+                               (BallDistanceReward(), 1)
                                )
 
     obs_builder = IndieDevDefaultObs()
@@ -95,14 +95,14 @@ def build_indiedev_500_env():
 
 if __name__ == "__main__":
     from rlgym_ppo import Learner
-    n_proc = 2
+    n_proc = 32
     # educated guess - could be slightly higher or lower
     min_inference_size = max(1, int(round(n_proc * 0.9)))
-
+    
     learner = Learner(build_indiedev_500_env, # DO NOT ADD () HERE, it will break the code
                       n_proc=n_proc, # number of processes to use for training
                       min_inference_size=min_inference_size, # IDK WHAT THIS IS
-                      metrics_logger=None, # METRICS LOGGER, None by default, will just make it log simple metrics
+                      metrics_logger=MyLogger(), # METRICS LOGGER, None by default, will just make it log simple metrics
                       ppo_batch_size=50_000, # batch size - set this number to as large as your GPU can handle
                       policy_layer_sizes=[96, 96, 96], # policy network
                       critic_layer_sizes=[96, 96, 96], # value network
@@ -121,5 +121,8 @@ if __name__ == "__main__":
                       log_to_wandb=True,
                       render=True, #? Set to what you want, NOTE: rendering slows down 1 env if render delay is set to something, that is recomended to be 0.1
                       )
+    
+
+    
     print("Starting training...")
     learner.learn()
